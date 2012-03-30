@@ -1,0 +1,2 @@
+content	checksum-verifier	chrome/content/
+overlay	chrome://browser/content/browser.xul	chrome://checksum-verifier/content/checksum.xul
