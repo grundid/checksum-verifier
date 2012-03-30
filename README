@@ -1,0 +1,5 @@
+== Checksum verifier Firefox extension ==
+
+This extension is a proof-of-concept for an idea to automatically verify the checksum of a 
+downloaded file if the checksum is available on the HTML page.
+
