@@ -1,40 +1,48 @@
 var ChecksumExtension = {
-
+	downloads : {},
+	
 	log : function(str) {
 		Components.classes['@mozilla.org/consoleservice;1'].getService(
 				Components.interfaces.nsIConsoleService).logStringMessage(str);
 	},
 
 	onLoad : function() {
-		Components.classes["@mozilla.org/observer-service;1"].getService(
-				Components.interfaces.nsIObserverService).addObserver(
-				ChecksumExtension.downloadObserver, "dl-done", false);
+		var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(
+				Components.interfaces.nsIObserverService);
+		observerService.addObserver(ChecksumExtension.downloadObserver, "dl-done", false);
+		observerService.addObserver(ChecksumExtension.downloadObserver, "dl-start", false);
 	},
 
 	onUnload : function() {
 		window.removeEventListener("load", ChecksumExtension.onLoad, false);
-		Components.classes["@mozilla.org/observer-service;1"].getService(
-				Components.interfaces.nsIObserverService).removeObserver(
-				ChecksumExtension.downloadObserver, "dl-done", false);
+		var observerService = Components.classes["@mozilla.org/observer-service;1"].getService(
+				Components.interfaces.nsIObserverService);
+		observerService.removeObserver(ChecksumExtension.downloadObserver, "dl-start", false);
+		observerService.removeObserver(ChecksumExtension.downloadObserver, "dl-done", false);
 	},
 
 	downloadObserver : {
 		observe : function(aSubject, topic, aData) {
 			ChecksumExtension.log("observe: " + topic);
 			if (topic == "dl-done") {
-				var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-						.getService(Components.interfaces.nsIPromptService);
-				var jsonSubject = window.JSON.stringify(aSubject);
-				var dl = aSubject.nsIDownload;
+				var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);				
 
 				var checksumMd5 = this.createChecksum(dl.targetFile,"MD5");
-				var checksumSha1 = this.createChecksum(dl.targetFile,"SHA1");
-//				prompts.alert(window, "Checksums", "MD5: "+checksumMd5+"\nSHA1: "+checksumSha1);
-				
-				
-				this.findChecksumInDocument(content.document.getElementsByTagName("body"), checksumMd5);
+				ChecksumExtension.log("MD5 for "+dl.displayName+" => " + checksumMd5);
 
-
+// var checksumSha1 = this.createChecksum(dl.targetFile,"SHA1");
+// var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+// .getService(Components.interfaces.nsIPromptService);
+// prompts.alert(window, "Checksums", "MD5: "+checksumMd5+"\nSHA1:
+// "+checksumSha1);
+				
+				var document = ChecksumExtension.downloads[dl.targetFile.path];
+				this.findChecksumInDocument(document.getElementsByTagName("body"), checksumMd5);
+				delete ChecksumExtension.downloads[dl.targetFile.path];
+			}
+			else if (topic == "dl-start") {
+				var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);				
+				ChecksumExtension.downloads[dl.targetFile.path] = content.document;
 			}
 		},
 		
