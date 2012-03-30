@@ -2,7 +2,7 @@
 
   <Description about="urn:mozilla:install-manifest">
     <em:id>checksum-verifier@grundid.de</em:id>
-    <em:version>0.12</em:version>
+    <em:version>0.14</em:version>
     <em:type>2</em:type>
 
    

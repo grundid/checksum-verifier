@@ -28,7 +28,9 @@ var ChecksumExtension = {
 				var dl = aSubject.QueryInterface(Components.interfaces.nsIDownload);				
 
 				var checksumMd5 = this.createChecksum(dl.targetFile,"MD5");
+				var checksumSha1 = this.createChecksum(dl.targetFile,"SHA1");
 				ChecksumExtension.log("MD5 for "+dl.displayName+" => " + checksumMd5);
+				ChecksumExtension.log("SHA1 for "+dl.displayName+" => " + checksumSha1);
 
 // var checksumSha1 = this.createChecksum(dl.targetFile,"SHA1");
 // var prompts = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
@@ -37,7 +39,7 @@ var ChecksumExtension = {
 // "+checksumSha1);
 				
 				var document = ChecksumExtension.downloads[dl.targetFile.path];
-				this.findChecksumInDocument(document.getElementsByTagName("body"), checksumMd5);
+				this.findChecksumInDocument(document.getElementsByTagName("body"), [checksumMd5,checksumSha1]);
 				delete ChecksumExtension.downloads[dl.targetFile.path];
 			}
 			else if (topic == "dl-start") {
@@ -66,18 +68,20 @@ var ChecksumExtension = {
 			
 		},
 		
-		findChecksumInDocument : function(elements, checksum) {
+		findChecksumInDocument : function(elements, checksums) {
 			for (var x = 0; x < elements.length;x++) {
 				var node = elements[x];
 				if (node.nodeType == 3) {
-					if (node.data.indexOf(checksum) != -1) {
-						ChecksumExtension.log("FOUND IT, parent: "+node.parentNode.nodeName);
-						node.parentNode.setAttribute("style","background-color:#00a500");
-						return true;
+					for (var c = 0; c < checksums.length;c++) {
+						if (node.data.indexOf(checksums[c]) != -1) {
+							ChecksumExtension.log("FOUND IT, parent: "+node.parentNode.nodeName);
+							node.parentNode.setAttribute("style","background-color:#00a500");
+							return true;
+						}
 					}
 				}
 				else {
-					if (this.findChecksumInDocument(node.childNodes,checksum))
+					if (this.findChecksumInDocument(node.childNodes,checksums))
 						return true;
 				}
 			}
